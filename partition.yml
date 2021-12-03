@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - block:
+        - parted: device=/dev/sda2 unit=GiB
+          register: sda2_info
+        - debug:
+            msg: '{{ sda2_info.disk.size }}'
+        - debug:
+            msg: "{{ sda2_info.disk.size }} greater than 40"
+          when: " sda2_info.disk.size  > 40"
+        - debug:
+            msg: "{{ sda2_info.disk.size }} less than 40"
+          when: " sda2_info.disk.size  < 40"

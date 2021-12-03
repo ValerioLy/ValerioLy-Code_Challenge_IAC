@@ -1,0 +1,37 @@
+---
+- name: Install docker on a Centos 7 machine
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install pre-requisite packages
+      yum:
+        name: "{{item}}"
+        state: latest
+      loop:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+    - name: Add Docker CE repo
+      get_url:
+       url: https://download.docker.com/linux/centos/docker-ce.repo
+       dest: /etc/yum.repos.d/docker-ce.repo
+    - name: Install Docker
+      yum: name=docker-ce state=latest
+    - name: Start and enable the Docker daemon
+      service: name=docker state=started enabled=yes
+    - name: Expose Api
+      lineinfile: 
+        path: /lib/systemd/system/docker.service 
+        regexp: '^(.*)ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock(.*)$' 
+        line: 'ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:4243 --containerd=/run/containerd/containerd.sock'
+        backrefs: yes
+    - name: Reload Port Api
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: docker
+    - name: Verify Api Connection
+      shell: ps -ef|grep docker
+      register: output
+    - debug: msg="{{ output.stdout }}"
+
