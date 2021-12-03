@@ -34,4 +34,33 @@
       shell: ps -ef|grep docker
       register: output
     - debug: msg="{{ output.stdout }}"
-
+    - name: Install firewalld
+      yum:
+        name: firewalld
+        state: latest
+      notify:
+        - start firewalld
+    - name: start firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+      become: yes
+    - name: enable 2376
+      firewalld:
+        zone: public
+        port: "{{item}}"
+        permanent: true
+        state: enabled
+      become: yes
+      loop:
+      - 2376/tcp
+      - 2377/tcp
+      - 7946/tcp
+      - 80/tcp
+      - 7946/udp
+      - 4789/udp
+    - name: reload service firewalld
+      systemd:
+        name: firewalld
+        state: reloaded
