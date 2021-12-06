@@ -9,3 +9,4 @@ il file "Vagrantfile" consente di creare 2 vm centos in locale tramite vagrant u
 
 usare "vagrant up" da wsl ubuntu per creare le 2 vm centos
 
+ansible-playbook docker.yml per avviare il playbook
