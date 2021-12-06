@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
     server1.vm.network "private_network", ip: "192.168.0.105"
     server1.vm.provision :ansible do |ansible|
       ansible.limit = "all"
-      ansible.playbook = 'docker.yml'
+      ansible.playbook = 'partition.yml'
     end
   end
  # config.vm.define "server2" do |server2|

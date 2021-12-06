@@ -1,15 +1,50 @@
 ---
-- hosts: all
+- hosts: localhost
   become: yes
+  connection: local
+  vars:
+    ansible_python_interpreter: /bin/python3
   tasks:
-    - block:
-        - parted: device=/dev/sda2 unit=GiB
-          register: sda2_info
-        - debug:
-            msg: '{{ sda2_info.disk.size }}'
-        - debug:
-            msg: "{{ sda2_info.disk.size }} greater than 40"
-          when: " sda2_info.disk.size  > 40"
-        - debug:
-            msg: "{{ sda2_info.disk.size }} less than 40"
-          when: " sda2_info.disk.size  < 40"
+    - name: Install pre-requisite packages
+      apt:
+        name: docker
+        state: latest
+    - name: Start and enable the Docker daemon
+      service: name=docker state=started enabled=yes
+    - name: Install Firewall
+      apt:
+        name: ufw
+        state: latest
+    - name: Port Enable Firewall TCP
+      ufw:
+        rule: allow
+        port: "{{item}}"
+        proto: tcp
+      become: yes
+      loop:
+      - "2376"
+      - "2377"
+      - "7946"
+      - "80"
+      - "22"
+    - name: Port Enable Firewall UDP
+      ufw:
+        rule: allow
+        port: "{{item}}"
+        proto: udp
+      become: yes
+      loop:
+      - "7946"
+      - "4789"
+    - name: Enable Firewall daemon
+      ufw:
+        state: enabled
+    - name: Reload Firewall daemon
+      ufw:
+        state: reloaded
+    - name: Restart Docker
+      service: name=docker state=restarted
+    - name: Init Master Node 
+      docker_swarm:
+        state: present 
+        advertise_addr: 192.168.33.1

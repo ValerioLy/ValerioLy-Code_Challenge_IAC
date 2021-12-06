@@ -2,7 +2,19 @@
 - name: Install docker on a Centos 7 machine
   hosts: all
   become: yes
+  become_method: su
   tasks:
+    - block:
+        - parted: device=/dev/sda2 unit=GiB
+          register: sda2_info
+        - debug:
+            msg: '{{ sda2_info.disk.size }}'
+        - debug:
+            msg: "{{ sda2_info.disk.size }} greater than 40"
+          when: " sda2_info.disk.size  > 40"
+        - debug:
+            msg: "{{ sda2_info.disk.size }} less than 40"
+          when: " sda2_info.disk.size  < 40"
     - name: Install pre-requisite packages
       yum:
         name: "{{item}}"
@@ -64,3 +76,13 @@
       systemd:
         name: firewalld
         state: reloaded
+    - name: install docker on localhost 
+      yum:
+        name: "{{item}}"
+        state: latest
+      loop:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+
+    
