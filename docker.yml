@@ -2,7 +2,6 @@
 - name: Install docker on a Centos 7 machine
   hosts: all
   become: yes
-  become_method: su
   tasks:
     - block:
         - parted: device=/dev/sda2 unit=GiB
@@ -84,5 +83,7 @@
       - yum-utils
       - device-mapper-persistent-data
       - lvm2
+    - name: join node to swarm cluster
+      shell: docker swarm join --token SWMTKN-1-4oh9y6xl4lmpdrakbc91260u6z7x8uqmjz0zuexcbgl5ivzd80-6huwpew2x2d6szlggr306lomk 192.168.33.1:2377
 
     

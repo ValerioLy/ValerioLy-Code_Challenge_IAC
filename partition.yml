@@ -42,9 +42,30 @@
     - name: Reload Firewall daemon
       ufw:
         state: reloaded
-    - name: Restart Docker
-      service: name=docker state=restarted
     - name: Init Master Node 
       docker_swarm:
         state: present 
         advertise_addr: 192.168.33.1
+    - name: Check Node
+      shell: docker node ls
+      register: output
+    - debug: msg="{{ output.stdout }}"
+    - name: check info 
+      shell: docker info
+      register: output
+    - debug: msg="{{ output.stdout }}"
+    - name: get token
+      shell: docker swarm join-token manager
+      register: token
+    - name: Deploy Service from local machine 
+      shell: docker service create -p 80:80 --name webservice --replicas 2 nginx
+    - name: show service state
+      shell: docker service ps webservice
+      register: ps
+    - debug: msg="{{ ps.stdout }}"
+    - name: verify it works normally
+      shell: curl 192.168.0.105
+      register: s1
+    - debug: msg="{{ s1.stdout }}"
+
+
