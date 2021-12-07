@@ -117,10 +117,14 @@
     - name: Reload Firewall daemon
       ufw:
         state: reloaded
+    - name: save in variable ipv4 advertise_addr
+      shell: ip addr list eth9 |grep "inet " |cut -d' ' -f6|cut -d/ -f1
+      register: adv
+    - debug: msg="{{ adv.stdout }}"
     - name: Init Master Node 
       docker_swarm:
         state: present 
-        advertise_addr: 192.168.33.1
+        advertise_addr: "{{adv.stdout}}"
     - name: Check Node
       shell: docker node ls
       register: output
