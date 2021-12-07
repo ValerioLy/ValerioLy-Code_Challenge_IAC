@@ -16,5 +16,4 @@ ansible-playbook docker.yml per avviare il playbook (utilizzare sudo per scalare
 
 Task Mancanti:
 - manca da predisporre il playbook con i roles
-- usare task con molecule
-- manca la parte di continous integration (iniziata associato github con Travis)
+- manca la parte di continous integration (iniziata associato github)
