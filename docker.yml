@@ -133,12 +133,16 @@
       shell: docker swarm join-token manager
       register: token
     - debug: msg="{{token.stdout}}"
+    - name: Register masternode with variable
+      add_host:
+       name: "masternode"
+       token_NEW: " {{ token.stdout }}"
 - name: Join Swarm by Token from Nodes
   hosts: servers
   become: yes
   tasks:
     - name: join node to swarm cluster
-      shell: docker swarm join --token SWMTKN-1-4oh9y6xl4lmpdrakbc91260u6z7x8uqmjz0zuexcbgl5ivzd80-6huwpew2x2d6szlggr306lomk 192.168.33.1:2377
+      shell: docker swarm join --token "{{ hostvars['masternode']['token_NEW'] }}" 192.168.33.1:2377
 - name: Deploy Service Swarm on Master Node
   hosts: localhost
   connection: local
@@ -152,13 +156,13 @@
       shell: docker service ps webservice
       register: ps
     - debug: msg="{{ ps.stdout }}"
-    - name: verify it works normally server1
-      shell: curl 192.168.0.105
+    - name: verify server1 works normally
+      shell: curl {{ hostvars[groups['servers'][0]].ansible_host }}
       register: s1
     - debug: msg="{{ s1.stdout }}"
-    - name: verify it works normally server2
-      shell: curl 192.168.0.106
-      register: s1
-    - debug: msg="{{ s1.stdout }}"
+    - name: verify server2 works normally
+      shell: curl {{ hostvars[groups['servers'][1]].ansible_host }}
+      register: s2
+    - debug: msg="{{ s2.stdout }}"
 
     

@@ -15,7 +15,7 @@ usare "vagrant up" da wsl ubuntu per creare le 2 vm centos
 ansible-playbook docker.yml per avviare il playbook (utilizzare sudo per scalare i privilegi da wsl)
 
 Task Mancanti:
-- manca da passare le variabili tra i play (token,ip interfaccia, curl servers)
+- manca da passare le variabili tra i play (advertise addr)
 - manca da predisporre il playbook con i roles
 - usare task con molecule
 - manca la parte di continous integration (iniziata associato github con Travis)
