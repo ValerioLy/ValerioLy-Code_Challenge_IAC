@@ -75,15 +75,90 @@
       systemd:
         name: firewalld
         state: reloaded
-    - name: install docker on localhost 
-      yum:
-        name: "{{item}}"
+- name: Swarm on Master Node
+  hosts: localhost
+  connection: local
+  become: true
+  vars:
+    ansible_python_interpreter: /bin/python3
+  tasks:
+    - name: Install pre-requisite packages
+      apt:
+        name: docker
         state: latest
+    - name: Start and enable the Docker daemon
+      service: name=docker state=started enabled=yes
+    - name: Install Firewall
+      apt:
+        name: ufw
+        state: latest
+    - name: Port Enable Firewall TCP
+      ufw:
+        rule: allow
+        port: "{{item}}"
+        proto: tcp
       loop:
-      - yum-utils
-      - device-mapper-persistent-data
-      - lvm2
-    #- name: join node to swarm cluster
-    #  shell: docker swarm join --token SWMTKN-1-4oh9y6xl4lmpdrakbc91260u6z7x8uqmjz0zuexcbgl5ivzd80-6huwpew2x2d6szlggr306lomk 192.168.33.1:2377
+      - "2376"
+      - "2377"
+      - "7946"
+      - "80"
+      - "22"
+    - name: Port Enable Firewall UDP
+      ufw:
+        rule: allow
+        port: "{{item}}"
+        proto: udp
+      loop:
+      - "7946"
+      - "4789"
+    - name: Enable Firewall daemon
+      ufw:
+        state: enabled
+    - name: Reload Firewall daemon
+      ufw:
+        state: reloaded
+    - name: Init Master Node 
+      docker_swarm:
+        state: present 
+        advertise_addr: 192.168.33.1
+    - name: Check Node
+      shell: docker node ls
+      register: output
+    - debug: msg="{{ output.stdout }}"
+    - name: check info 
+      shell: docker info
+      register: output
+    - debug: msg="{{ output.stdout }}"
+    - name: get token
+      shell: docker swarm join-token manager
+      register: token
+    - debug: msg="{{token.stdout}}"
+- name: Join Swarm by Token from Nodes
+  hosts: servers
+  become: yes
+  tasks:
+    - name: join node to swarm cluster
+      shell: docker swarm join --token SWMTKN-1-4oh9y6xl4lmpdrakbc91260u6z7x8uqmjz0zuexcbgl5ivzd80-6huwpew2x2d6szlggr306lomk 192.168.33.1:2377
+- name: Deploy Service Swarm on Master Node
+  hosts: localhost
+  connection: local
+  become: true
+  vars:
+    ansible_python_interpreter: /bin/python3
+  tasks:
+    - name: Deploy Service from local machine 
+      shell: docker service create -p 80:80 --name webservice --replicas 2 nginx
+    - name: show service state
+      shell: docker service ps webservice
+      register: ps
+    - debug: msg="{{ ps.stdout }}"
+    - name: verify it works normally server1
+      shell: curl 192.168.0.105
+      register: s1
+    - debug: msg="{{ s1.stdout }}"
+    - name: verify it works normally server2
+      shell: curl 192.168.0.106
+      register: s1
+    - debug: msg="{{ s1.stdout }}"
 
     
